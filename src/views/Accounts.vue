@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full w-full">
-    Categories 2
+    Accounts page
   </div>
 </template>
 
