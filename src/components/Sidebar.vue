@@ -1,31 +1,33 @@
 <template>
-  <div class="w-[350px] bg-white/50 border-r-2 border-gray-400 text-gray-800 p-8">
+  <div class="w-[300px] h-full bg-white border-r border-gray-200 shadow-sm p-3">
     <MenuItem
-        v-for="item in menuData"
-        :key="item.name"
+        v-for="(item, i) in menuData"
+        :key="item.name + i"
         :item="item"
+        :selected="selectedItem"
         :depth="0"
         @select="onSelect"
     />
   </div>
-
 </template>
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import MenuItem from "@/views/MenuItem.vue";
-import {computed} from "vue";
+import {computed, ref} from "vue";
 
 const router = useRouter();
 
-
 interface MenuNode {
   name: string;
-  link: string;
+  link?: string;
   children?: MenuNode[];
 }
 
+const selectedItem = ref<MenuNode | null>(null);
+
 const onSelect = (item: MenuNode) => {
+  selectedItem.value = item;
   if (item.link) {
     router.push(item.link);
   }
@@ -39,26 +41,22 @@ const menuData = computed<MenuNode[]>(() =>  [
           {
             name: 'About',
             link: '/about',
-            children: []
-          },
+           },
           {
             name: 'Account',
             link: '/account',
-            children: []
-          },
+           },
           {
             name: 'Categories',
             link: "",
             children: [
               {
-                name: "Categories",
+                name: "Category",
                 link: '/categories',
-                children: []
               },
               {
                 name: "Products",
                 link: '/products',
-                children: []
               },
             ]
           },

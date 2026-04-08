@@ -1,7 +1,7 @@
 <template>
-  <div class="menu-item gap-4" @click.stop="toggle">
-    <div class="menu-item__row border-b-2 border-gray-300 shadow-xs" :class="{ 'menu-item__row--active': isOpen }">
-      <span class="text-gray-800 text-md font-semibold">{{ item.name }}</span>
+  <div class="menu-item" @click.stop="toggle">
+    <div class="menu-item__row hover:bg-gray-100 text-gray-600 border-b-2 border-gray-100" :class="{ 'menu-item__row--active bg-blue-50': isOpen }">
+      <span class="text-md font-semibold p-1">{{ item.name }}</span>
       <svg
           v-if="item.children?.length"
           :style="{ transform: isOpen ? 'rotate(90deg)' : 'none' }"
@@ -10,15 +10,16 @@
       >
         <polyline points="9 18 15 12 9 6" />
       </svg>
-      <span v-else class=" font-semibold menu-item__badge">✓</span>
+      <span v-else-if="!item.children?.length && isSelected" class="font-semibold menu-item__badge">✓</span>
     </div>
 
     <transition name="slide">
-      <div v-if="isOpen && item.children?.length" class="menu-item__children">
+      <div v-if="isOpen && item.children?.length" class="text-gray-600 mb-1 text-sm menu-item__children">
         <MenuItem
             v-for="child in item.children"
             :key="child.name"
             :item="child"
+            :selected="selected"
             :depth="depth + 1"
             @select="$emit('select', $event)"
         />
@@ -28,21 +29,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import {computed, ref} from 'vue'
 
 
 interface MenuNode {
   name: string;
-  link: string;
-  children: MenuNode[];
+  link?: string;
+  children?: MenuNode[];
 }
 
 const props = defineProps<{
   item: MenuNode;
+  selected: MenuNode | null;
   depth?: number
 }>()
 
-const depth = props.depth ?? 0
+const isSelected = computed(() => {
+  return props.selected?.name === props.item?.name
+})
+
+const depth = computed(() => props.depth ?? 0 )
 
 const emit = defineEmits<{
   select: [item: MenuNode]
@@ -53,7 +59,7 @@ const isOpen = ref(false)
 const toggle = () => {
   if (props.item.children?.length) {
     isOpen.value = !isOpen.value
-  } else {
+  } else if (props.item.link) {
     emit('select', props.item)
   }
 }
@@ -69,8 +75,7 @@ const toggle = () => {
   justify-content: space-between;
   padding: 10px 14px;
   cursor: pointer;
-  color: #374151;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
   gap: 8px;
 }
 .menu-item__row--active {
@@ -82,8 +87,8 @@ const toggle = () => {
 .menu-item__badge {
   font-size: 11px;
   background: #D1FAE5;
-  color: #065F46;
-  padding: 2px 8px;
+
+  padding: 2px 6px;
   border-radius: 20px;
 }
 
@@ -92,5 +97,13 @@ const toggle = () => {
   padding-left: 12px;
   border-left: 2px solid #E5E7EB;
   margin-top: 2px;
+}
+.slide-enter-active, .slide-leave-active {
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+.slide-enter-from, .slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>
