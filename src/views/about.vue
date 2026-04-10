@@ -190,8 +190,13 @@
           </div>
           <div class="bookings-table">
             <div class="table-head">
-              <span>Mijoz</span><span>Xizmat</span><span>Xodim</span>
-              <span>Sana / Vaqt</span><span>Tur</span><span>Holat</span><span></span>
+              <span>Mijoz</span>
+              <span>Xizmat</span>
+              <span>Xodim</span>
+              <span>Sana / Vaqt</span>
+              <span>Tur</span>
+              <span>Holat</span>
+              <span></span>
             </div>
             <div v-if="filteredAllBookings.length===0" class="table-empty">Navbat topilmadi</div>
             <div v-for="b in filteredAllBookings" :key="b.id" class="table-row"
@@ -483,7 +488,7 @@
         </div>
         <div class="modal-footer">
           <select :value="detailBooking.status"
-                  @change="updateStatus(detailBooking!.id,($event.target as HTMLSelectElement).value)"
+                  @change="updateStatus(detailBooking.id,($event.target as HTMLSelectElement).value)"
                   class="status-sel" :class="statusClass(detailBooking.status)">
             <option>Kutilmoqda</option><option>Bajarildi</option><option>Bekor</option>
           </select>
@@ -496,20 +501,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import {ref, computed, Ref} from 'vue'
 
 interface Service { name:string; duration:number; price?:number }
 interface Employee { id:number; name:string; role:string; phone:string; color:string; services:string[] }
 interface Booking {
-  id:number; clientName:string; phone:string; service:string; duration:number
-  date:string; time:string; status:'Kutilmoqda'|'Bajarildi'|'Bekor'
-  source:'online'|'staff'; employeeId:number; note?:string
+  id:number;
+  clientName:string;
+  phone:string;
+  service:string;
+  duration:number
+  date:string;
+  time:string;
+  status:'Kutilmoqda'|'Bajarildi'|'Bekor'
+  source:'online'|'staff';
+  employeeId:number;
+  note?:string
 }
 interface BookingForm { clientName:string; phone:string; service:string; duration:number; date:string; time:string; employeeId:number; note?:string }
 
 const role       = ref<'staff'|'client'|null>(null)
 const activeTab  = ref('schedule')
-const staffTabs  = [{key:'schedule',label:'📅 Jadval'},{key:'employees',label:'👥 Xodimlar'},{key:'bookings',label:'📋 Navbatlar'},{key:'add',label:"+ Qo'shish"}]
+const staffTabs  = [
+    {key:'schedule', label:'📅 Jadval'},
+    {key:'employees', label:'👥 Xodimlar'},
+    {key:'bookings', label:'📋 Navbatlar'},
+    {key:'add', label:"+ Qo'shish"}
+]
 const clientTabs = [{key:'book',label:'📅 Navbat olish'},{key:'mybookings',label:'🕐 Mening navbatlarim'}]
 const today      = new Date().toISOString().split('T')[0]
 const scheduleDate = ref(today)
@@ -551,10 +569,19 @@ const bookings = ref<Booking[]>([
 const emptyAdd    = ():BookingForm => ({clientName:'',phone:'',service:'',duration:0,date:today,time:'',employeeId:0,note:''})
 const emptyClient = ():BookingForm => ({clientName:'',phone:'',service:'',duration:0,date:today,time:'',employeeId:0})
 
+interface FormErrors {
+  clientName?: string
+  phone?: string
+  service?: string
+  date?: string
+  employeeId?: string
+  time?: string
+}
+
 const addForm    = ref<BookingForm>(emptyAdd())
 const clientForm = ref<BookingForm>(emptyClient())
-const addErrors    = ref<Record<string,string>>({})
-const clientErrors = ref<Record<string,string>>({})
+const addErrors    = ref<FormErrors>({})
+const clientErrors = ref<FormErrors>({})
 
 const filteredAllBookings = computed(()=>
     bookings.value
@@ -570,7 +597,9 @@ const selectedClientSvc = computed(()=>services.value.find(s=>s.name===clientFor
 
 const timeSlots:string[] = (()=>{
   const s:string[]=[]
-  for(let h=9;h<19;h++) for(const m of[0,30]) s.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`)
+  for(let h=9;h<19;h++)
+    for(const m of[0,30])
+      s.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`)
   return s
 })()
 
@@ -610,14 +639,48 @@ function serviceIcon(name:string){ if(name.includes('Soch')) return '✂️'; if
 
 function enterAs(r:'staff'|'client'){ role.value=r; activeTab.value=r==='staff'?'schedule':'book' }
 function resetView(){ activeTab.value=role.value==='staff'?'schedule':'book' }
-function selectEmp(emp:Employee,form:BookingForm){ if(isEmpFull(emp.id,form.date,form.service)) return; form.employeeId=emp.id; form.time='' }
+function selectEmp(emp: Employee, form: Ref<BookingForm>) {
+  if (isEmpFull(emp.id, form.value.date, form.value.service)) return
+  form.value.employeeId = emp.id
+  form.value.time = ''
+}
 function onAddServiceChange(){ const s=services.value.find(x=>x.name===addForm.value.service); addForm.value.duration=s?.duration||0; addForm.value.employeeId=0; addForm.value.time='' }
 function onClientServiceChange(){ const s=services.value.find(x=>x.name===clientForm.value.service); clientForm.value.duration=s?.duration||0; clientForm.value.employeeId=0; clientForm.value.time='' }
 
-function validateAdd(){ addErrors.value={}; if(!addForm.value.clientName.trim()) addErrors.value.clientName='Ism majburiy'; if(!addForm.value.service) addErrors.value.service='Xizmat tanlang'; if(!addForm.value.date) addErrors.value.date='Sana tanlang'; if(!addForm.value.employeeId) addErrors.value.employeeId='Xodim tanlang'; if(!addForm.value.time) addErrors.value.time='Vaqt tanlang'; return !Object.keys(addErrors.value).length }
+function validateAdd(){
+  addErrors.value={};
+  if(!addForm.value.clientName.trim())
+    addErrors.value.clientName='Ism majburiy';
+  if(!addForm.value.service)
+    addErrors.value.service='Xizmat tanlang';
+  if(!addForm.value.date)
+    addErrors.value.date='Sana tanlang';
+  if(!addForm.value.employeeId)
+    addErrors.value.employeeId='Xodim tanlang';
+  if(!addForm.value.time)
+    addErrors.value.time='Vaqt tanlang';
+  return !Object.keys(addErrors.value).length
+}
 function validateClient(){ clientErrors.value={}; if(!clientForm.value.clientName.trim()) clientErrors.value.clientName='Ism majburiy'; if(!clientForm.value.phone.trim()) clientErrors.value.phone='Telefon majburiy'; if(!clientForm.value.service) clientErrors.value.service='Xizmat tanlang'; if(!clientForm.value.date) clientErrors.value.date='Sana tanlang'; if(!clientForm.value.employeeId) clientErrors.value.employeeId='Usta tanlang'; if(!clientForm.value.time) clientErrors.value.time='Vaqt tanlang'; return !Object.keys(clientErrors.value).length }
 
-function saveStaffBooking(){ if(!validateAdd()) return; bookings.value.push({id:Date.now(),clientName:addForm.value.clientName,phone:addForm.value.phone,service:addForm.value.service,duration:addForm.value.duration,date:addForm.value.date,time:addForm.value.time,status:'Kutilmoqda',source:'staff',employeeId:addForm.value.employeeId,note:addForm.value.note}); scheduleDate.value=addForm.value.date; addForm.value=emptyAdd(); activeTab.value='schedule' }
+function saveStaffBooking(){
+  if(!validateAdd()) return;
+  bookings.value.push({id:Date.now(),
+    clientName:addForm.value.clientName,
+    phone:addForm.value.phone,
+    service:addForm.value.service,
+    duration:addForm.value.duration,
+    date:addForm.value.date,
+    time:addForm.value.time,
+    status:'Kutilmoqda',
+    source:'staff',
+    employeeId:addForm.value.employeeId,
+    note:addForm.value.note
+  });
+  scheduleDate.value=addForm.value.date;
+  addForm.value=emptyAdd();
+  activeTab.value='schedule'
+}
 function saveClientBooking(){ if(!validateClient()) return; bookings.value.push({id:Date.now(),clientName:clientForm.value.clientName,phone:clientForm.value.phone,service:clientForm.value.service,duration:clientForm.value.duration,date:clientForm.value.date,time:clientForm.value.time,status:'Kutilmoqda',source:'online',employeeId:clientForm.value.employeeId}); const emp=getEmp(clientForm.value.employeeId); successMsg.value=`${emp?.name} ustasi bilan ${formatDateShort(clientForm.value.date)} soat ${clientForm.value.time} da navbatiz qabul qilindi!`; myPhone.value=clientForm.value.phone; clientForm.value=emptyClient(); setTimeout(()=>{successMsg.value=''},6000); activeTab.value='mybookings' }
 function deleteBooking(id:number){ bookings.value=bookings.value.filter(b=>b.id!==id) }
 function updateStatus(id:number,status:string){ const b=bookings.value.find(b=>b.id===id); if(b) b.status=status as Booking['status']; if(detailBooking.value?.id===id) detailBooking.value={...detailBooking.value!,status:status as Booking['status']} }
@@ -810,6 +873,120 @@ function deleteEmployee(id:number){ employees.value=employees.value.filter(e=>e.
 .modal-row strong{color:#1e293b}
 .modal-footer{padding:14px 24px;border-top:1px solid #f1f5f9;display:flex;gap:10px;justify-content:flex-end;align-items:center}
 .empty-msg{text-align:center;color:#94a3b8;font-size:14px;padding:32px}
+/* STATUS ranglari */
+.st--pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.st--done {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.st--cancel {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* select ichidagi rang */
+.status-sel.st--pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-sel.st--done {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-sel.st--cancel {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* form error */
+.inp-err {
+  border-color: #ef4444 !important;
+  background: #fef2f2;
+}
+
+.err-msg {
+  font-size: 11px;
+  color: #dc2626;
+  margin-top: 4px;
+}
+
+/* success toast */
+.toast-success {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #22c55e;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* modal */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 700;
+}
+
+.modal-body {
+  padding: 14px 16px;
+}
+
+.modal-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #e2e8f0;
+  justify-content: flex-end;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+}
 @media(max-width:680px){
   .form-row{grid-template-columns:1fr}
   .table-head,.table-row{grid-template-columns:1.5fr 1fr 1fr}
