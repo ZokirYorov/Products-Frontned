@@ -3,7 +3,7 @@
     <Header class="fixed flex-1 top-0 left-0 right-0 z-40" />
 
     <div class="flex flex-1 mt-14">
-      <Sidebar class="" />
+<!--      <Sidebar class="" />-->
       <RouterView class="flex-1 w-full h-full p-4"/>
     </div>
   </div>
