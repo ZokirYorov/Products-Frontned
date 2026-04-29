@@ -488,7 +488,7 @@
         </div>
         <div class="modal-footer">
           <select :value="detailBooking.status"
-                  @change="updateStatus(detailBooking.id,($event.target as HTMLSelectElement).value)"
+                  @change="updateStatus(detailBooking!.id,($event.target as HTMLSelectElement).value)"
                   class="status-sel" :class="statusClass(detailBooking.status)">
             <option>Kutilmoqda</option><option>Bajarildi</option><option>Bekor</option>
           </select>
@@ -501,7 +501,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, Ref} from 'vue'
+import { ref, computed } from 'vue'
 
 interface Service { name:string; duration:number; price?:number }
 interface Employee { id:number; name:string; role:string; phone:string; color:string; services:string[] }
@@ -558,6 +558,7 @@ const employees = ref<Employee[]>([
 
 const empForm = ref({name:'',role:'',phone:'',color:'#6366f1',services:[] as string[]})
 
+// Bular store dan keladigam item lar
 const bookings = ref<Booking[]>([
   {id:1,clientName:'Aziz Karimov',phone:'+998901234567',service:'Soch olish',duration:30,date:today,time:'09:00',status:'Kutilmoqda',source:'online',employeeId:1},
   {id:2,clientName:'Malika Rahimova',phone:'+998932345678',service:'Manikyur',duration:60,date:today,time:'09:00',status:'Kutilmoqda',source:'staff',employeeId:2},
@@ -735,7 +736,7 @@ function deleteEmployee(id:number){ employees.value=employees.value.filter(e=>e.
 .dot--online{background:#0ea5e9}.dot--manual{background:#6366f1}.dot--done{background:#22c55e}.dot--cancel{background:#94a3b8}
 .sched-wrap{overflow-x:auto;border-radius:14px;border:1px solid #e2e8f0;background:#fff}
 .sched-table{min-width:700px}
-.sched-head{display:flex;border-bottom:2px solid #e2e8f0;background:#f8fafc;position:sticky;top:60px;z-index:5}
+.sched-head{display:flex;border-bottom:2px solid #e2e8f0;background:#f8fafc;position:sticky;z-index:5}
 .sched-time-hd{width:70px;flex-shrink:0;padding:12px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-right:1px solid #e2e8f0}
 .sched-emp-hd{flex:1;padding:10px 12px;border-right:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;min-width:160px}
 .emp-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
@@ -873,120 +874,6 @@ function deleteEmployee(id:number){ employees.value=employees.value.filter(e=>e.
 .modal-row strong{color:#1e293b}
 .modal-footer{padding:14px 24px;border-top:1px solid #f1f5f9;display:flex;gap:10px;justify-content:flex-end;align-items:center}
 .empty-msg{text-align:center;color:#94a3b8;font-size:14px;padding:32px}
-/* STATUS ranglari */
-.st--pending {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
-}
-
-.st--done {
-  background: #dcfce7;
-  color: #166534;
-  border: 1px solid #86efac;
-}
-
-.st--cancel {
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-}
-
-/* select ichidagi rang */
-.status-sel.st--pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-sel.st--done {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status-sel.st--cancel {
-  background: #f1f5f9;
-  color: #64748b;
-}
-
-/* form error */
-.inp-err {
-  border-color: #ef4444 !important;
-  background: #fef2f2;
-}
-
-.err-msg {
-  font-size: 11px;
-  color: #dc2626;
-  margin-top: 4px;
-}
-
-/* success toast */
-.toast-success {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #22c55e;
-  color: #fff;
-  padding: 12px 18px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-}
-
-/* modal */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-.modal {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.modal-head {
-  display: flex;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e2e8f0;
-  font-weight: 700;
-}
-
-.modal-body {
-  padding: 14px 16px;
-}
-
-.modal-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  padding: 6px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.modal-footer {
-  display: flex;
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid #e2e8f0;
-  justify-content: flex-end;
-}
-
-.modal-close {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 16px;
-}
 @media(max-width:680px){
   .form-row{grid-template-columns:1fr}
   .table-head,.table-row{grid-template-columns:1.5fr 1fr 1fr}
